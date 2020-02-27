@@ -34,7 +34,7 @@ public abstract class AScorer {
      */
     public String getDebugStr(Document d, Query q)
     {
-        return "Pagerank: " + Integer.toString(d.page_rank);
+        return getQueryFreqs(q).toString();
     }
 
     /**
@@ -53,13 +53,21 @@ public abstract class AScorer {
         // queryWord -> term frequency
         Map<String,Double> tfQuery = new HashMap<>();
 
+        //create raw term frequencies
+        for(String term : q.queryWords){
+            tfQuery.compute(term, (k,v)->v==null? 1.0:v+1.0);
+        }
+        //weight each term using the idf
+        tfQuery.replaceAll((k,v)->v*Math.log((double)this.utils.totalNumDocs()/(double)this.utils.docFreq(k)));
+        //weighted query frequency
         /*
-         * TODO : Your code here
+         * Your code here
          * Compute the raw term frequencies
          * Additionally weight each of the terms using the idf value
          * of the term in the query (we use the provided text corpus to 
-         * determine how many documents contain the query terms, which is stored
-         * in this.idfs).
+         * determine how many documents contain the query terms, which can be
+         * obtained from this.utils
+         * ).
          */
 
         return tfQuery;
@@ -94,7 +102,10 @@ public abstract class AScorer {
          * Initialize any variables needed
          */
 
+
+
         for (String queryWord : q.queryWords) {
+            System.out.print("");
             /*
              * TODO: Your code here
              * Loop through query terms and accumulate term frequencies.
@@ -102,6 +113,7 @@ public abstract class AScorer {
              * i.e. for each of the different fields.
              * Don't forget to lowercase the query word.
              */
+
         }
         return tfs;
     }
