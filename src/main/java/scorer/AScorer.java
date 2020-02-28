@@ -57,9 +57,9 @@ public abstract class AScorer {
         for(String term : q.queryWords){
             tfQuery.compute(term, (k,v)->v==null? 1.0:v+1.0);
         }
-        //weight each term using the idf
+        //weight each term using the idf (log(Total docs/term frequency))
         tfQuery.replaceAll((k,v)->v*Math.log((double)this.utils.totalNumDocs()/(double)this.utils.docFreq(k)));
-        //weighted query frequency
+        
         /*
          * Your code here
          * Compute the raw term frequencies
@@ -83,7 +83,6 @@ public abstract class AScorer {
      * the various fields are represented.
      */
 
-
     /**
      * Accumulate the various kinds of term frequencies
      * for the fields (title, body).
@@ -105,7 +104,7 @@ public abstract class AScorer {
 
 
         for (String queryWord : q.queryWords) {
-            System.out.print("");
+
             /*
              * TODO: Your code here
              * Loop through query terms and accumulate term frequencies.
