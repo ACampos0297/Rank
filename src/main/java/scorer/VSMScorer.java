@@ -8,6 +8,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,6 +44,22 @@ public class VSMScorer extends AScorer {
      */
     public double getNetScore(Map<String, Map<String, Double>> tfs, Query q, Map<String,Double> tfQuery, Document d) {
         double score = 0.0;
+        double weightTitle = 0.0;
+        double weightBody= 0.0;
+        double queryVect= 0.0;
+        for(Double tfdt:tfs.get("title").values()){
+            weightTitle += titleweight*tfdt;
+        }
+
+        for(Double tfdb:tfs.get("body").values()){
+            weightBody += bodyweight*tfdb;
+        }
+
+        queryVect = weightBody+weightTitle;
+
+        for(Double qvq:tfQuery.values()){
+            score+= queryVect*qvq;
+        }
 
         /*
          * TODO : Your code here
@@ -63,6 +82,17 @@ public class VSMScorer extends AScorer {
          * Note that we should use the length of each field 
          * for term frequency normalization as discussed in the assignment handout.
          */
+        String str[] = d.title.split(" ");
+        List<String> title = new ArrayList<String>();
+        title = Arrays.asList(str);
+
+        //perform length normalization
+        for(Map.Entry<String,Double> entry: tfs.get("title").entrySet()){
+            entry.setValue(entry.getValue()/title.size());
+        }
+        for(Map.Entry<String,Double> entry: tfs.get("body").entrySet()){
+            entry.setValue(entry.getValue()/d.body_hits.size());
+        }
     }
 
     /**

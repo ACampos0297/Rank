@@ -4,8 +4,7 @@ import ds.Document;
 import ds.Query;
 import utils.IndexUtils;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * An abstract class for a scorer.
@@ -34,7 +33,7 @@ public abstract class AScorer {
      */
     public String getDebugStr(Document d, Query q)
     {
-        return getQueryFreqs(q).toString();
+        return "Query:: "+q.toString() +" "+ getDocTermFreqs(d,q).toString();
     }
 
     /**
@@ -100,11 +99,24 @@ public abstract class AScorer {
          * TODO : Your code here
          * Initialize any variables needed
          */
+        Map<String,Double> titleWords = new HashMap<>();
+        Map<String,Double> bodyWords = new HashMap<>();
 
+        String str[] = d.title.split(" ");
+        List<String> title = new ArrayList<String>();
+        title = Arrays.asList(str);
 
 
         for (String queryWord : q.queryWords) {
-
+            queryWord = queryWord.toLowerCase();
+            if(title.contains(queryWord)){
+                titleWords.compute(queryWord,(k,v)->v==null? 1.0:v+1.0);
+            }
+            if(d.body_hits!=null){
+                if(d.body_hits.containsKey(queryWord)) {
+                    bodyWords.compute(queryWord, (k, v) -> v=(double) d.body_hits.get(k).size());
+                }
+            }
             /*
              * TODO: Your code here
              * Loop through query terms and accumulate term frequencies.
@@ -114,6 +126,13 @@ public abstract class AScorer {
              */
 
         }
+        //perform sub-linear scaling
+        titleWords.replaceAll(((k,v)->v>0? 1+Math.log(v):0));
+        bodyWords.replaceAll(((k,v)->v>0? 1+Math.log(v):0));
+
+        tfs.put("title",titleWords);
+        tfs.put("body",bodyWords);
+
         return tfs;
     }
 
