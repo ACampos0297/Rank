@@ -23,7 +23,7 @@ public class VSMScorer extends AScorer {
      * TODO: You will want to tune the values for
      * the weights for each field.
      */
-    double titleweight  = 0.1;
+    double titleweight  = 0.91;
     double bodyweight = 0.1;
 
     /**

@@ -33,7 +33,7 @@ public abstract class AScorer {
      */
     public String getDebugStr(Document d, Query q)
     {
-        return "Query:: "+q.toString() +" "+ getDocTermFreqs(d,q).toString();
+        return "";
     }
 
     /**
