@@ -19,16 +19,21 @@ public class BM25Scorer extends AScorer {
     /*
      *  TODO: You will want to tune these values
      */
-    double titleweight  = 0.1;
-    double bodyweight = 0.1;
+    //sum to 1
+    double titleweight  = 0.85;
+    double bodyweight = 1-titleweight;
 
+    //sum to 1
     // BM25-specific weights
-    double btitle = 0.1;
-    double bbody = 0.1;
+    double btitle = 0.03; //best 0.1
+    double bbody = 1-btitle;
 
-    double k1 = 0.1;
+
+
+    double k1 = 1;
     double pageRankLambda = 0.1;
-    double pageRankLambdaPrime = 0.1;
+    double pageRankLambdaPrime = 0.2;
+    double pageRankLabmdaDoublePrime =1;
 
     // query -> url -> document
     Map<Query,Map<String, Document>> queryDict;
@@ -69,14 +74,32 @@ public class BM25Scorer extends AScorer {
          * accumulate lengths of fields.
          * handle pagerank.  
          */
+        double titleLenAvg=0.0;
+        double bodyLenAvg = 0.0;
+        //calculate length of field in a given document for all documents
+        for(Query qs : this.queryDict.keySet()){
+            for(Document ds:this.queryDict.get(qs).values()){
+                Map<String,Double> fieldLength = new HashMap<>();
+                fieldLength.put("title",(double)ds.title_length);
+                titleLenAvg+=ds.title_length;
+                fieldLength.put("body",(double)ds.body_length);
+                bodyLenAvg+=ds.body_length;
+                lengths.put(ds,fieldLength);
 
-        for (String tfType : this.TFTYPES) {
-            /*
-             * TODO : Your code here
-             * Normalize lengths to get average lengths for
-             * each field (body, title).
-             */
+                //Vj function
+                pagerankScores.put(ds,1/(pageRankLambdaPrime+Math.exp(-1.0*ds.page_rank*pageRankLabmdaDoublePrime)));
+            }
         }
+
+        /*
+         * TODO : Your code here
+         * Normalize lengths to get average lengths for
+         * each field (body, title).
+         */
+        titleLenAvg = titleLenAvg/(double)lengths.size();
+        bodyLenAvg = bodyLenAvg/(double)lengths.size();
+        avgLengths.put("title",titleLenAvg);
+        avgLengths.put("body",bodyLenAvg);
 
     }
 
@@ -91,6 +114,23 @@ public class BM25Scorer extends AScorer {
     public double getNetScore(Map<String,Map<String, Double>> tfs, Query q, Map<String,Double> tfQuery, Document d) {
 
         double score = 0.0;
+
+        tfs.get("title").replaceAll((k,v)->v=titleweight*v);
+        tfs.get("body").replaceAll((k,v)->v=bodyweight*v);
+
+        tfs.get("body").forEach((k,v)->v=tfs.get("title").get(k)==null?v:v+tfs.get("title").get(k));
+
+
+        //idf (double)this.utils.totalNumDocs()/(double)this.utils.docFreq(term)
+        double wdt=0.0;
+        for(String word : q.queryWords){
+            wdt=tfs.get("body").get(word)==null?0.0:tfs.get("body").get(word);
+
+            score+= (wdt/(k1+wdt))*((double)this.utils.totalNumDocs()/(double)this.utils.docFreq(word))+pageRankLambda*pagerankScores.get(d);
+            //add lambda Vi
+
+        }
+
 
         /*
          * TODO : Your code here
@@ -113,6 +153,8 @@ public class BM25Scorer extends AScorer {
          * Use equation 2 in the writeup to normalize the raw term frequencies
          * in fields in document d.
          */
+        tfs.get("title").replaceAll((k,v)->v=(double)v/((1-btitle)+btitle*(d.title_length)));
+        tfs.get("body").replaceAll((k,v)->v=(double)v/((1-bbody)+bbody*(d.body_length)));
     }
 
     /**
