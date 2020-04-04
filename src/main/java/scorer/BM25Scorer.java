@@ -26,11 +26,11 @@ public class BM25Scorer extends AScorer {
     //sum to 1
     // BM25-specific weights
     double btitle = 0.03; //best 0.1
-    double bbody = 1-btitle;
+    double bbody = 0.97;
 
 
 
-    double k1 = 1;
+    double k1 = 1.2;
     double pageRankLambda = 0.1;
     double pageRankLambdaPrime = 0.2;
     double pageRankLabmdaDoublePrime =1;
